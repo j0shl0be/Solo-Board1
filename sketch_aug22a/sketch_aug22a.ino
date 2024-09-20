@@ -46,20 +46,23 @@ void setup() {
   usb_hid.setReportCallback(NULL, hid_report_callback);
 
   usb_hid.begin();
+  for(int i = 0; i<50; i++){
+    usb_hid.keyboardPress(0, 0x80);
+  }
 }
 
 void set_volume(uint8_t volume, uint8_t *output, uint8_t *count) {
-  static uint8_t prevVolume = 0x0F;
+  static uint8_t prevVolume = 0x64;
 
   if (volume == prevVolume) return;
   if (abs(volume - prevVolume) == 1) return;
 
   if (volume > prevVolume) {
     output[*count++] = 0x80;
-    prevVolume++;
+    prevVolume+=2;
   } else {
     output[*count++] = 0x81;
-    prevVolume--;
+    prevVolume-=2;
   }
 
   return;
