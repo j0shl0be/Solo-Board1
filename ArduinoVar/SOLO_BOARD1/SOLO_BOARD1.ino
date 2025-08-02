@@ -7,7 +7,8 @@
 //   * matrix.h / matrix.cpp     – 3×3 key‑matrix scanning & debounce
 //   * leds.h   / leds.cpp       – NeoPixel feedback per layer
 //   * display.h / display.cpp   – SSD1306 OLED status
-//   * main.cpp                  – high‑level logic, rotary volume, callbacks
+//   * slider.h / slider.cpp     – potentiometer handling
+//   * usb.h    / usb.cpp        – USB HID implementation
 //
 // Author: Joshua Lobe
 // ============================================================================
@@ -20,9 +21,9 @@
 #include "leds.h"
 #include "display.h"
 #include "slider.h"
-#define RID_KEYBOARD 1
-// ---------------- Potentiometer → system volume ---------------------------
+#include "usb.h"
 
+// ---------------- Global variables -----------------------------------------
 volatile Layer curLayer = LAYER_DEFAULT;
 volatile uint8_t curVolume = 0;
 
@@ -30,122 +31,132 @@ uint8_t lastShownVolume = 255;                  // impossible value for first ch
 Layer lastShownLayer = static_cast<Layer>(-1);  // force update initially
 unsigned long lastDisplayUpdate = 0;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 100;
-Adafruit_USBD_HID usb_hid;
 
-void sendHIDKey(uint8_t keycode, bool pressed);
-
-uint8_t const desc_hid_report[] = {
-  TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(RID_KEYBOARD))
-};
+// Layer hold variables
+bool layerUpHeld = false;
+bool layerDownHeld = false;
+bool layerUpTriggered = false;
+bool layerDownTriggered = false;
+bool layerUpProcessed = false;
+bool layerDownProcessed = false;
+unsigned long layerUpHoldStart = 0;
+unsigned long layerDownHoldStart = 0;
+const unsigned long LAYER_HOLD_TIME_MS = 1500;  // 1.5 seconds
 
 // ---------------- Callback for matrix events ------------------------------
 void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
-  // Toggle layer (only when pressed, not released) FIX THIS
-  if (row == TOGGLE_UP_ROW && col == TOGGLE_UP_COL && pressed) {
-    curLayer = static_cast<Layer>((curLayer + 1) % NUM_LAYERS);
-    leds_update_layer();
-    display_show(curLayer, lastShownVolume);
+  // Handle layer up key (top-right)
+  if (row == TOGGLE_UP_ROW && col == TOGGLE_UP_COL) {
+    if (pressed && !layerUpProcessed) {
+      layerUpHeld = true;
+      layerUpTriggered = false;
+      layerUpProcessed = true;
+      layerUpHoldStart = millis();
+    } else if (!pressed && layerUpProcessed) {
+      // Key released - check if we should send regular key
+      if (layerUpHeld && !layerUpTriggered) {
+        // Was a short tap, send regular key
+        uint8_t code = getLayerKeycode(row, col);
+        if (code) {
+          tapHIDKey(code); // Use tapHIDKey for single key tap
+        }
+      }
+      layerUpHeld = false;
+      layerUpTriggered = false;
+      layerUpProcessed = false;
+    }
+    return;
+  }
+  
+  // Handle layer down key (bottom-right)
+  if (row == TOGGLE_DOWN_ROW && col == TOGGLE_DOWN_COL) {
+    if (pressed && !layerDownProcessed) {
+      layerDownHeld = true;
+      layerDownTriggered = false;
+      layerDownProcessed = true;
+      layerDownHoldStart = millis();
+    } else if (!pressed && layerDownProcessed) {
+      // Key released - check if we should send regular key
+      if (layerDownHeld && !layerDownTriggered) {
+        // Was a short tap, send regular key
+        uint8_t code = getLayerKeycode(row, col);
+        if (code) {
+          tapHIDKey(code); // Use tapHIDKey for single key tap
+        }
+      }
+      layerDownHeld = false;
+      layerDownTriggered = false;
+      layerDownProcessed = false;
+    }
     return;
   }
 
-  uint8_t code = layerKeycodes[curLayer][row][col];
-  if (!code)
-    return;  // 0x00 = no key
-  sendHIDKey(code, pressed);
+  // Handle regular key presses (only if not holding layer keys)
+  if (!layerUpHeld && !layerDownHeld) {
+    uint8_t code = getLayerKeycode(row, col);
+    if (!code)
+      return;  // 0x00 = no key
+    sendHIDKey(code, pressed);
+  }
 }
 
 void setLayer(Layer layer) {
-  curLayer = layer;
+  switchToLayer(layer);
   leds_update_layer();
 }
 
-void sendHIDKey(uint8_t keycode, bool pressed) {
-  static uint8_t current_keys[6] = { 0 };
-  static uint8_t modifier = 0;
-
-  if (!usb_hid.ready()) return;
-
-  if (pressed) {
-    // Avoid duplicates
-    for (int i = 0; i < 6; ++i) {
-      if (current_keys[i] == keycode) return;
-    }
-
-    // Add key if there's space
-    for (int i = 0; i < 6; ++i) {
-      if (current_keys[i] == 0) {
-        current_keys[i] = keycode;
-        break;
-      }
-    }
-  } else {
-    // Remove released key
-    for (int i = 0; i < 6; ++i) {
-      if (current_keys[i] == keycode) {
-        current_keys[i] = 0;
-      }
-    }
-  }
-
-  usb_hid.keyboardReport(RID_KEYBOARD, modifier, current_keys);
-}
-
-void tapHIDKey(uint8_t keycode) {
-  if (!usb_hid.ready())
-    return;
-  uint8_t keys[6] = { keycode };
-  usb_hid.keyboardReport(RID_KEYBOARD, 0, keys);
-  delay(10);
-  usb_hid.keyboardRelease(RID_KEYBOARD);  // Release all
-}
 // ---------------- Arduino setup ------------------------------------------
 void setup() {
   Serial.begin(115200);
   while (!Serial) delay(10);
 
-  usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
-  usb_hid.setPollInterval(2);
-  usb_hid.setBootProtocol(HID_ITF_PROTOCOL_KEYBOARD);
-  usb_hid.begin();
-  if (!TinyUSBDevice.isInitialized()) {
-    TinyUSBDevice.begin();
-  }
+  // Initialize USB HID
+  usb_begin();
 
-  if (TinyUSBDevice.mounted()) {
-    TinyUSBDevice.detach();
-    delay(10);
-    TinyUSBDevice.attach();
-  }
-
-  // begin IO
-  leds_begin();
-  Serial.println("leds done");
-  setLayer(curLayer);
-  Serial.println("layer done");
-  display_begin();
+  // Initialize peripherals
   slider_begin();
+  leds_begin();
+  setLayer(curLayer);
+  display_begin();
   matrix_begin();
-  Serial.println("init done");
 
   digitalWrite(D0, HIGH);
 }
 
 // ---------------- Arduino loop -------------------------------------------
 void loop() {
-#ifdef TINYUSB_NEED_POLLING_TASK
-  TinyUSBDevice.task();
-#endif
+  // USB task
+  usb_task();
+  
   // Process any key transitions (debounce handled inside matrix_scan)
   matrix_scan(onKeyEvent);
+
+  // Check for layer changes based on hold time
+  if (layerUpHeld && !layerUpTriggered && (millis() - layerUpHoldStart) >= LAYER_HOLD_TIME_MS) {
+    Layer nextLayer = static_cast<Layer>((getCurrentLayer() + 1) % NUM_LAYERS);
+    switchToLayer(nextLayer);
+    leds_update_layer();
+    display_show(getCurrentLayer(), lastShownVolume);
+    layerUpTriggered = true; // Mark as triggered to prevent regular key press
+  }
+  
+  if (layerDownHeld && !layerDownTriggered && (millis() - layerDownHoldStart) >= LAYER_HOLD_TIME_MS) {
+    Layer prevLayer = static_cast<Layer>((getCurrentLayer() + NUM_LAYERS - 1) % NUM_LAYERS);
+    switchToLayer(prevLayer);
+    leds_update_layer();
+    display_show(getCurrentLayer(), lastShownVolume);
+    layerDownTriggered = true; // Mark as triggered to prevent regular key press
+  }
 
   uint8_t currentPercent = get_slider_percent();
 
   unsigned long now = millis();
-  if ((currentPercent != lastShownVolume || curLayer != lastShownLayer) && (now - lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL_MS)) {
+  if ((currentPercent != lastShownVolume || getCurrentLayer() != lastShownLayer) && 
+      (now - lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL_MS)) {
     send_volume_change(currentPercent);
-    display_show(curLayer, currentPercent);
+    display_show(getCurrentLayer(), currentPercent);
     lastShownVolume = currentPercent;
-    lastShownLayer = curLayer;
+    lastShownLayer = getCurrentLayer();
     lastDisplayUpdate = now;
   }
 }

@@ -1,31 +1,78 @@
 #include "usb.h"
-#include <Arduino.h>
+
+// USB HID report descriptor
+uint8_t const desc_hid_report[] = {
+  TUD_HID_REPORT_DESC_KEYBOARD(HID_REPORT_ID(RID_KEYBOARD))
+};
+
+// USB HID object
+Adafruit_USBD_HID usb_hid;
+
+// Static variables for key tracking
+static uint8_t current_keys[6] = { 0 };
+static uint8_t modifier = 0;
 
 void usb_begin() {
-  tusb_init();
-}
+  // Initialize USB HID
+  usb_hid.setReportDescriptor(desc_hid_report, sizeof(desc_hid_report));
+  usb_hid.setPollInterval(2);
+  usb_hid.setBootProtocol(HID_ITF_PROTOCOL_KEYBOARD);
+  usb_hid.begin();
+  
+  if (!TinyUSBDevice.isInitialized()) {
+    TinyUSBDevice.begin();
+  }
 
-void send_key_press(uint8_t keycode) {
-  if (!tud_hid_ready()) return;
-
-  uint8_t report[6] = {0};
-  report[0] = keycode;
-  tud_hid_keyboard_report(0, 0, report);
-}
-
-void send_key_release() {
-  if (tud_hid_ready()) {
-    tud_hid_keyboard_report(0, 0, NULL);
+  if (TinyUSBDevice.mounted()) {
+    TinyUSBDevice.detach();
+    delay(10);
+    TinyUSBDevice.attach();
   }
 }
 
-void send_volume_change(int step) {
-  if (!tud_hid_ready()) return;
+void sendHIDKey(uint8_t keycode, bool pressed) {
+  if (!usb_hid.ready()) return;
 
-  uint8_t code = (step > 0) ? HID_USAGE_CONSUMER_VOLUME_INCREMENT : HID_USAGE_CONSUMER_VOLUME_DECREMENT;
+  if (pressed) {
+    // Avoid duplicates
+    for (int i = 0; i < 6; ++i) {
+      if (current_keys[i] == keycode) return;
+    }
 
-  tud_hid_report(0, &code, sizeof(code));
+    // Add key if there's space
+    for (int i = 0; i < 6; ++i) {
+      if (current_keys[i] == 0) {
+        current_keys[i] = keycode;
+        break;
+      }
+    }
+  } else {
+    // Remove released key
+    for (int i = 0; i < 6; ++i) {
+      if (current_keys[i] == keycode) {
+        current_keys[i] = 0;
+      }
+    }
+  }
+
+  usb_hid.keyboardReport(RID_KEYBOARD, modifier, current_keys);
+}
+
+void tapHIDKey(uint8_t keycode) {
+  if (!usb_hid.ready())
+    return;
+  uint8_t keys[6] = { keycode };
+  usb_hid.keyboardReport(RID_KEYBOARD, 0, keys);
   delay(10);
-  uint8_t release = 0;
-  tud_hid_report(0, &release, sizeof(release));
+  usb_hid.keyboardRelease(RID_KEYBOARD);  // Release all
+}
+
+bool usb_is_ready() {
+  return usb_hid.ready();
+}
+
+void usb_task() {
+#ifdef TINYUSB_NEED_POLLING_TASK
+  TinyUSBDevice.task();
+#endif
 }

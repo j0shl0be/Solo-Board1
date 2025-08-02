@@ -1,13 +1,27 @@
 #include "slider.h"
+#include "keymap.h"
+#include "leds.h"
 
 int lastPotValue = 0;
 int lastVolumeStep = -1;
 int lastVolumePercent = 0;
+bool serialConnected = false;
+uint8_t globalBrightness = DEFAULT_BRIGHTNESS;
 
 void slider_begin() {
   analogReadResolution(ADC_ACCURACY);
   lastPotValue = analogRead(POT_PIN);
-  display_show(curLayer, map(lastPotValue, 0, 4095, 0, 100));
+  uint8_t percent = get_slider_percent();
+  display_show(curLayer, percent);
+  
+  // Initialize EEPROM if needed
+  EEPROM.begin(256);
+  
+  // Load saved brightness from EEPROM
+  globalBrightness = load_brightness();
+  
+  // Set serial as connected since Serial.begin() was called
+  serialConnected = true;
 }
 
 uint8_t get_slider_percent() {//returns a calibrated volume
@@ -16,6 +30,12 @@ uint8_t get_slider_percent() {//returns a calibrated volume
     lastPotValue = potValue;
   }
   uint8_t percent = calibrate_vol(map(lastPotValue, 0, 4095, 0, 100));
+  
+  // Protect against values > 100 due to potentiometer contact issues
+  if (percent > 100) {
+    percent = 100;
+  }
+  
   return percent;
 }
 
@@ -32,15 +52,58 @@ uint8_t calibrate_vol(uint8_t uncalibrated) {
 }
 
 void send_volume_change(uint8_t percent) {//sends the calibrated volume out if it is a larger difference than the threshold
-  //if (!tud_hid_ready())
-  //  Serial.println("USB not ready");
-  //  return;
+  SliderFunction currentFunc = getCurrentSliderFunction();
+  
+  // Additional protection: clamp percent to 0-100 range
+  if (percent > 100) {
+    percent = 100;
+  }
+  
   int step = map(percent, 0, 100, 0, VOLUME_STEPS);  // use VOLUME_STEPS = number of HID sends
   if (step != lastVolumeStep) {
     lastVolumeStep = step;
-    // Send absolute volume message to Mac via USB serial
-    Serial.print("VOL:");
-    Serial.println(percent);
+    
+    // Handle different slider functions
+    switch (currentFunc) {
+      case SLIDER_VOLUME:
+        // Send volume over serial if connected
+        if (serialConnected) {
+          Serial.print("VOL:");
+          Serial.println(percent);
+          Serial.flush(); // Ensure data is sent immediately
+        }
+        break;
+      case SLIDER_BRIGHTNESS:
+        // Update global brightness and save to EEPROM (0-100 range)
+        uint8_t newBrightness = percent; // Use percent directly (0-100)
+        if (newBrightness != globalBrightness) {
+          update_global_brightness(newBrightness);
+        }
+        break;
+    }
   }
   return;
+}
+
+uint8_t load_brightness() {
+  uint8_t savedBrightness = EEPROM.read(BRIGHTNESS_EEPROM_ADDR);
+  
+  // Validate saved brightness (should be between 0-100)
+  if (savedBrightness > 100) {
+    savedBrightness = DEFAULT_BRIGHTNESS;
+    save_brightness(savedBrightness);
+  }
+  
+  return savedBrightness;
+}
+
+void save_brightness(uint8_t brightness) {
+  EEPROM.write(BRIGHTNESS_EEPROM_ADDR, brightness);
+  EEPROM.commit();
+}
+
+void update_global_brightness(uint8_t newBrightness) {
+  globalBrightness = newBrightness;
+  save_brightness(globalBrightness);
+  leds_brightness(globalBrightness);
 }

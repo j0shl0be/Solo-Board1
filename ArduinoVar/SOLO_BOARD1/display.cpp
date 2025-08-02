@@ -2,13 +2,15 @@
 #include <splash.h>
 
 #include "display.h"
+#include "keymap.h"
+#include "slider.h"
 #include <Arduino.h>
 #include "Wire.h"
 
 // ---------------------------------------------------------------------------
-// SSD1306 helper – now 100 % core‑agnostic.
+// SSD1306 helper – now 100 % core‑agnostic.
 // We use the *default* I²C bus (Wire = I²C0) so no `setSDA()` / `setSCL()`
-// calls are required (they don’t exist in the Arduino‑MBED core).
+// calls are required (they don't exist in the Arduino‑MBED core).
 // On a Pico/KB2040 that means:
 //   • SDA0 = GP4  (pin 6 on Pico header, "SCL" pad on KB2040 STEMMA)
 //   • SCL0 = GP5  (pin 7 on Pico header, "SDA" pad on KB2040 STEMMA)
@@ -41,18 +43,41 @@ void display_show(uint8_t layer, uint8_t volumePercent) {
   oled.setTextSize(1);
   oled.setTextColor(SSD1306_WHITE);
 
+  // Get current layer info
+  const char* layerName = getCurrentDisplayName();
+  SliderFunction sliderFunc = getCurrentSliderFunction();
+  
+  // Display layer name
   oled.setCursor(0, 0);
   oled.print("Layer: ");
-  oled.print(layer == 0 ? "DEF" : "F-KEYS");
+  oled.print(layerName);
 
+  // Display slider function and value
   oled.setCursor(0, 16);
-  oled.print("Vol: ");
-  oled.print(volumePercent);
-  oled.println('%');
+  switch (sliderFunc) {
+    case SLIDER_VOLUME:
+      oled.print("Vol: ");
+      oled.print(volumePercent);
+      oled.println('%');
+      
+      // Show serial status for volume layers
+      oled.setCursor(0, 32);
+      oled.println("Serial: Active");
+      break;
+    case SLIDER_BRIGHTNESS:
+      oled.print("Bright: ");
+      oled.print(volumePercent);
+      oled.println('%');
+      oled.setCursor(0, 32);
+      oled.print("Global: ");
+      oled.print(globalBrightness);
+      oled.println("/100");
+      break;
+  }
 
-  /* volume bar */
-  oled.drawRect(0, 32, 128, 10, SSD1306_WHITE);
-  oled.fillRect(1, 33, map(volumePercent, 0, 100, 0, 126), 8, SSD1306_WHITE);
+  /* slider bar */
+  oled.drawRect(0, 48, 128, 10, SSD1306_WHITE);
+  oled.fillRect(1, 49, map(volumePercent, 0, 100, 0, 126), 8, SSD1306_WHITE);
 
   oled.display();
 }

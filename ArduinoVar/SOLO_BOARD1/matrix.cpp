@@ -32,10 +32,6 @@ void matrix_scan(KeyEventCallback cb) {
       if (reading != keyState[c][r] && (millis() - keyDebounceTime[c][r]) > DEBOUNCE_MS) {
         keyDebounceTime[c][r] = millis();
         keyState[c][r] = reading;
-        Serial.print("READ KEY in column");
-        Serial.println(c);
-        Serial.println(r);
-        Serial.println(reading);
         cb(r, c, reading == 1);  // pressed if HIGH
       }
     }
@@ -53,10 +49,6 @@ void matrix_scantest(KeyEventCallback cb) {
     if (reading != keyState[c][r] && (millis() - keyDebounceTime[c][r]) > DEBOUNCE_MS) {
       keyDebounceTime[c][r] = millis();
       keyState[c][r] = reading;
-      Serial.print("READ KEY in column");
-      Serial.println(c);
-      Serial.println(r);
-      Serial.println(reading);
       cb(r, c, reading == 1);  // pressed if HIGH
     }
   }
