@@ -13,7 +13,7 @@ extern Adafruit_USBD_HID usb_hid;
 
 // Function declarations
 void usb_begin();
-void sendHIDKey(uint8_t keycode, bool pressed);
-void tapHIDKey(uint8_t keycode);
+void sendHIDKey(uint8_t keycode, bool pressed, uint8_t modifier = 0);
+void tapHIDKey(uint8_t keycode, uint8_t modifier = 0);
 bool usb_is_ready();
 void usb_task();

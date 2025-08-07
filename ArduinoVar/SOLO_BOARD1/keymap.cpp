@@ -13,9 +13,9 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      {0x05, 0x06, 0x07},  // b, c, d
-      {0x04, 0x08, 0x09},  // a, e, f
-      {0x0C, 0x0B, 0x0A}   // l, k, j
+      {{KEY_B, KEY_MOD_LSHIFT, 0, 0}, {KEY_C, KEY_MOD_LSHIFT, 0, 0}, {KEY_D, KEY_MOD_LSHIFT, 0, 0}},  // b, c, d
+      {{KEY_A, KEY_MOD_LSHIFT, 0, 0}, {KEY_E, KEY_MOD_LSHIFT, 0, 0}, {KEY_F, KEY_MOD_LSHIFT, 0, 0}},  // a, e, f
+      {{KEY_I, KEY_MOD_LSHIFT, 0, 0}, {KEY_H, KEY_MOD_LSHIFT, 0, 0}, {KEY_G, KEY_MOD_LSHIFT, 0, 0}}   // i, h, g
     },
     SLIDER_VOLUME,                    // Slider function
     0x0050FF,                        // Blue color
@@ -26,9 +26,9 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      {KEY_F13, KEY_F14, KEY_F15},
-      {KEY_F16, KEY_F17, KEY_F18},
-      {KEY_F19, KEY_F20, KEY_F21}
+      {{KEY_TAB, KEY_MOD_LALT, 0, 0}, {KEY_F14, 0, 0, 0}, {KEY_F15, 0, 0, 0}},
+      {{KEY_F16, 0, 0, 0}, {KEY_F17, 0, 0, 0}, {KEY_F18, 0, 0, 0}},
+      {{KEY_F19, 0, 0, 0}, {KEY_F20, 0, 0, 0}, {KEY_F21, 0, 0, 0}}
     },
     SLIDER_VOLUME,                   // Slider function
     0xFF0064,                        // Magenta color
@@ -39,9 +39,9 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      {0x4F, 0x50, 0x51},           // Media play/pause, next, previous
-      {0x52, 0x53, 0x54},           // Volume up, down, mute
-      {0x55, 0x56, 0x57}            // Media controls
+      {{KEY_MEDIA_PLAYPAUSE, 0, 0, 0}, {KEY_MEDIA_NEXTSONG, 0, 0, 0}, {KEY_MEDIA_PREVIOUSSONG, 0, 0, 0}},  // Media play/pause, next, previous
+      {{KEY_MEDIA_VOLUMEUP, 0, 0, 0}, {KEY_MEDIA_VOLUMEDOWN, 0, 0, 0}, {KEY_MEDIA_MUTE, 0, 0, 0}},  // Volume up, down, mute
+      {{KEY_MEDIA_PLAYPAUSE, 0, 0, 0}, {KEY_MEDIA_NEXTSONG, 0, 0, 0}, {KEY_MEDIA_PREVIOUSSONG, 0, 0, 0}}   // Media controls
     },
     SLIDER_BRIGHTNESS,               // Slider function
     0x00FF00,                        // Green color
@@ -54,7 +54,7 @@ const LayerConfig* getCurrentLayerConfig() {
   return &layerConfigs[curLayer];
 }
 
-uint8_t getLayerKeycode(uint8_t row, uint8_t col) {
+KeyCombo getLayerKeycode(uint8_t row, uint8_t col) {
   return layerConfigs[curLayer].keycodes[row][col];
 }
 

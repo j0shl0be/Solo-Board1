@@ -37,19 +37,3 @@ void matrix_scan(KeyEventCallback cb) {
     }
   }
 }
-
-void matrix_scantest(KeyEventCallback cb) {
-  uint8_t c = 0;
-  // Drive current row high, others low
-  digitalWrite(COL_PINS[c],HIGH);
-  delayMicroseconds(3);
-
-  for (uint8_t r = 0; r < 3; ++r) {
-    uint8_t reading = digitalRead(ROW_PINS[r]);
-    if (reading != keyState[c][r] && (millis() - keyDebounceTime[c][r]) > DEBOUNCE_MS) {
-      keyDebounceTime[c][r] = millis();
-      keyState[c][r] = reading;
-      cb(r, c, reading == 1);  // pressed if HIGH
-    }
-  }
-}

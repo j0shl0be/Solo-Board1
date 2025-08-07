@@ -30,15 +30,15 @@ void usb_begin() {
   }
 }
 
-void sendHIDKey(uint8_t keycode, bool pressed) {
+void sendHIDKey(uint8_t keycode, bool pressed, uint8_t modifier) {
   if (!usb_hid.ready()) return;
-
+  uint8_t modifierSend = 0;
   if (pressed) {
     // Avoid duplicates
     for (int i = 0; i < 6; ++i) {
       if (current_keys[i] == keycode) return;
     }
-
+    modifierSend = modifier;
     // Add key if there's space
     for (int i = 0; i < 6; ++i) {
       if (current_keys[i] == 0) {
@@ -49,20 +49,20 @@ void sendHIDKey(uint8_t keycode, bool pressed) {
   } else {
     // Remove released key
     for (int i = 0; i < 6; ++i) {
-      if (current_keys[i] == keycode) {
+      if (current_keys[i] == keycode) { 
         current_keys[i] = 0;
       }
     }
   }
 
-  usb_hid.keyboardReport(RID_KEYBOARD, modifier, current_keys);
+  usb_hid.keyboardReport(RID_KEYBOARD, modifierSend, current_keys);
 }
 
-void tapHIDKey(uint8_t keycode) {
+void tapHIDKey(uint8_t keycode, uint8_t modifier) {
   if (!usb_hid.ready())
     return;
   uint8_t keys[6] = { keycode };
-  usb_hid.keyboardReport(RID_KEYBOARD, 0, keys);
+  usb_hid.keyboardReport(RID_KEYBOARD, modifier, keys);
   delay(10);
   usb_hid.keyboardRelease(RID_KEYBOARD);  // Release all
 }

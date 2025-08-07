@@ -56,10 +56,9 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
       // Key released - check if we should send regular key
       if (layerUpHeld && !layerUpTriggered) {
         // Was a short tap, send regular key
-        uint8_t code = getLayerKeycode(row, col);
-        if (code) {
-          tapHIDKey(code); // Use tapHIDKey for single key tap
-        }
+        KeyCombo code = getLayerKeycode(row, col);
+        if (code.keycode == 0) return;
+        tapHIDKey(code.keycode, code.modifier1 | code.modifier2 | code.modifier3);
       }
       layerUpHeld = false;
       layerUpTriggered = false;
@@ -79,10 +78,9 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
       // Key released - check if we should send regular key
       if (layerDownHeld && !layerDownTriggered) {
         // Was a short tap, send regular key
-        uint8_t code = getLayerKeycode(row, col);
-        if (code) {
-          tapHIDKey(code); // Use tapHIDKey for single key tap
-        }
+        KeyCombo code = getLayerKeycode(row, col);
+        if (code.keycode == 0) return;
+        tapHIDKey(code.keycode, code.modifier1 | code.modifier2 | code.modifier3);
       }
       layerDownHeld = false;
       layerDownTriggered = false;
@@ -93,10 +91,9 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
 
   // Handle regular key presses (only if not holding layer keys)
   if (!layerUpHeld && !layerDownHeld) {
-    uint8_t code = getLayerKeycode(row, col);
-    if (!code)
-      return;  // 0x00 = no key
-    sendHIDKey(code, pressed);
+    KeyCombo code = getLayerKeycode(row, col);
+    if (code.keycode == 0) return;
+    sendHIDKey(code.keycode, pressed, code.modifier1 | code.modifier2 | code.modifier3);
   }
 }
 
@@ -105,7 +102,6 @@ void setLayer(Layer layer) {
   leds_update_layer();
 }
 
-// ---------------- Arduino setup ------------------------------------------
 void setup() {
   Serial.begin(115200);
   while (!Serial) delay(10);
@@ -123,7 +119,6 @@ void setup() {
   digitalWrite(D0, HIGH);
 }
 
-// ---------------- Arduino loop -------------------------------------------
 void loop() {
   // USB task
   usb_task();
@@ -148,6 +143,7 @@ void loop() {
     layerDownTriggered = true; // Mark as triggered to prevent regular key press
   }
 
+  // Update display and slider value
   uint8_t currentPercent = get_slider_percent();
 
   unsigned long now = millis();
@@ -160,3 +156,4 @@ void loop() {
     lastDisplayUpdate = now;
   }
 }
+  
