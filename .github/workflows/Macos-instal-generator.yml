@@ -38,15 +38,9 @@ jobs:
           output-directory: ${{ runner.temp }}
           # install-location: /Applications   # optional
 
-      - name: Stage installers folder
-        run: |
-          mkdir -p installers
-          mv build/your.bin installers/your.bin
-
-      - name: Upload installers (always)
-        if: always()
+      - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
           name: installers
-          path: installers/**   
+          path: installers/**
           if-no-files-found: error
