@@ -1,7 +1,9 @@
 name: Generate macOS Installer
 
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      'main'
 
 jobs:
   pkg:
@@ -36,8 +38,15 @@ jobs:
           output-directory: ${{ runner.temp }}
           # install-location: /Applications   # optional
 
-      - name: Upload pkg artifact
+      - name: Stage installers folder
+        run: |
+          mkdir -p installers
+          mv build/your.bin installers/your.bin
+
+      - name: Upload installers (always)
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: solo-listener-macos-pkg
-          path: ${{ runner.temp }}/*.pkg
+          name: installers
+          path: installers/**   
+          if-no-files-found: error
