@@ -59,9 +59,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          git pull --rebase origin main
           git add installers/
           git commit -m "Add macOS installer (run ${{ github.run_number }}) [skip ci]" || true
+          git pull --rebase --autostash origin main || true
           n=0
           until [ $n -ge 5 ]
           do
@@ -71,7 +71,7 @@ jobs:
             n=$((n+1))
             echo "Push failed, rebasing and retrying ($n/5)..."
             git fetch origin main
-            git pull --rebase origin main || true
+            git pull --rebase --autostash origin main || true
             sleep $((RANDOM % 5 + 1))
           done
   
@@ -144,9 +144,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git fetch origin main
           git checkout main
-          git pull --rebase origin main
           git add installers/
           git commit -m "Add Windows installer (run ${{ github.run_number }}) [skip ci]" || true
+          git pull --rebase --autostash origin main || true
           n=0
           until [ $n -ge 5 ]
           do
@@ -156,6 +156,6 @@ jobs:
             n=$((n+1))
             echo "Push failed, rebasing and retrying ($n/5)..."
             git fetch origin main
-            git pull --rebase origin main || true
+            git pull --rebase --autostash origin main || true
             sleep $((RANDOM % 5 + 1))
           done
