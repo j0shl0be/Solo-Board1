@@ -41,7 +41,7 @@ jobs:
         uses: akiojin/generate-mac-installer-github-action@v0.1.1
         with:
           root-directory: dist
-          bundle-path: macOS-installer.app
+          bundle-path: macOS-installer-${{ github.run_number }}.app
           identifier: com.solo.board.macos-installer
           version: ${{ github.run_number }}
           output-directory: installers
