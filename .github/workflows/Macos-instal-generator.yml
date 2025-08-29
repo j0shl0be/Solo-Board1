@@ -30,7 +30,7 @@ jobs:
 
       - name: Build macOS app bundle
         run: |
-          pyinstaller --windowed --name macOS-installer --hidden-import serial.tools.list_ports listener/main.py
+          pyinstaller --windowed --name macOS-installer-${{ github.run_number }} --hidden-import serial.tools.list_ports listener/main.py
           ls -la dist
 
       - name: Ensure installers directory exists
