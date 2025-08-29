@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -48,14 +50,30 @@ jobs:
         run: |
           ls -la installers
 
-      - name: Commit and push installers to main
+      - name: Commit and push installers to main (rebase + retry)
         if: github.event_name != 'pull_request'
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
           git add installers/
-          git commit -m "Add macOS installer (run ${{ github.run_number }}) [skip ci]" || echo "No changes"
-          git push
+          git commit -m "Add macOS installer (run ${{ github.run_number }}) [skip ci]" || true
+          n=0
+          until [ $n -ge 5 ]
+          do
+            if git push origin HEAD:main; then
+              break
+            fi
+            n=$((n+1))
+            echo "Push failed, rebasing and retrying ($n/5)..."
+            git fetch origin main
+            git pull --rebase origin main || true
+            sleep $((RANDOM % 5 + 1))
+          done
   
 
   pkg-Windows:
@@ -63,6 +81,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -115,11 +135,27 @@ jobs:
         run: |
           ls installers
 
-      - name: Commit and push installers to main
+      - name: Commit and push installers to main (rebase + retry)
         if: github.event_name != 'pull_request'
+        shell: bash
         run: |
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          git pull --rebase origin main
           git add installers/
-          git commit -m "Add Windows installer (run ${{ github.run_number }}) [skip ci]" || echo "No changes"
-          git push
+          git commit -m "Add Windows installer (run ${{ github.run_number }}) [skip ci]" || true
+          n=0
+          until [ $n -ge 5 ]
+          do
+            if git push origin HEAD:main; then
+              break
+            fi
+            n=$((n+1))
+            echo "Push failed, rebasing and retrying ($n/5)..."
+            git fetch origin main
+            git pull --rebase origin main || true
+            sleep $((RANDOM % 5 + 1))
+          done
