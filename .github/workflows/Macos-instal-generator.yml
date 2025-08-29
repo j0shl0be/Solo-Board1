@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  pkg:
+  pkg-Macos:
     runs-on: macos-latest
     steps:
       - name: Checkout
@@ -28,7 +28,7 @@ jobs:
 
       - name: Build macOS app bundle
         run: |
-          pyinstaller --windowed --name SoloListener --hidden-import serial.tools.list_ports listener/main.py
+          pyinstaller --windowed --name macOS-installer --hidden-import serial.tools.list_ports listener/main.py
           ls -la dist
 
       - name: Ensure installers directory exists
@@ -39,12 +39,11 @@ jobs:
         uses: akiojin/generate-mac-installer-github-action@v0.1.1
         with:
           root-directory: dist
-          bundle-path: SoloListener.app
-          identifier: com.solo.board.listener
+          bundle-path: macOS-installer.app
+          identifier: com.solo.board.macos-installer
           version: ${{ github.run_number }}
           output-directory: installers
           # install-location: /Applications
-
       - name: Verify installers directory
         run: |
           ls -la installers
@@ -57,3 +56,63 @@ jobs:
           git add installers/
           git commit -m "Add macOS installer (run ${{ github.run_number }}) [skip ci]" || echo "No changes"
           git push
+  
+
+  pkg-Windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pyserial pyvolume
+
+      - name: Build Windows exe
+        run: |
+          pyinstaller --onefile --windowed --name Windows-installer --hidden-import serial.tools.list_ports listener/main.py
+          Get-ChildItem -Recurse dist
+
+      - name: Ensure installers directory exists
+        run: |
+          New-Item -ItemType Directory -Path installers -Force | Out-Null
+
+      - name: Install Inno Setup
+        run: |
+          choco install innosetup --yes --no-progress
+
+      - name: Create Inno Setup script
+        run: |
+          @"
+          [Setup]
+          AppName=Windows-installer
+          AppVersion=${{ github.run_number }}
+          DefaultDirName={autopf}\Windows-installer
+          OutputDir=installers
+          OutputBaseFilename=Windows-installer-${{ github.run_number }}
+          Compression=lzma
+          SolidCompression=yes
+
+          [Files]
+          Source: "dist\Windows-installer.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+          [Icons]
+          Name: "{autoprograms}\Windows-installer"; Filename: "{app}\Windows-installer.exe"
+          "@ | Out-File -FilePath installer.iss -Encoding ASCII
+
+      - name: Build Windows installer
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+          dir installers
+
+      - name: Upload Windows installer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Windows-installer-exe
+          path: installers\*.exe
