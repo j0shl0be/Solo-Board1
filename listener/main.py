@@ -6,9 +6,6 @@ import signal
 import sys
 import platform
 import subprocess
-import comtypes
-import pyvolume
-import pycaw
 
 TARGET_VID = 0x239a
 TARGET_PID = 0xcafe
