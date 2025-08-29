@@ -26,11 +26,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install pyinstaller pyserial pyvolume
 
-      # Build a macOS .app bundle (required by the installer action)
       - name: Build macOS app bundle
         run: |
           pyinstaller --windowed --name SoloListener --hidden-import serial.tools.list_ports listener/main.py
           ls -la dist
+
+      - name: Ensure installers directory exists
+        run: |
+          mkdir -p installers
 
       - name: Generate macOS Installer
         uses: akiojin/generate-mac-installer-github-action@v0.1.1
@@ -40,6 +43,7 @@ jobs:
           identifier: com.solo.board.listener
           version: ${{ github.run_number }}
           output-directory: installers
+          # install-location: /Applications
 
       - name: Verify installers directory
         run: |
