@@ -111,8 +111,15 @@ jobs:
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
           dir installers
 
-      - name: Upload Windows installer artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Windows-installer-exe
-          path: installers\*.exe
+      - name: Verify installers directory
+        run: |
+          ls -la installers
+
+      - name: Commit and push installers to main
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add installers/
+          git commit -m "Add Windows installer (run ${{ github.run_number }}) [skip ci]" || echo "No changes"
+          git push
