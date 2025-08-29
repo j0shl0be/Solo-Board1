@@ -30,7 +30,7 @@ jobs:
 
       - name: Build macOS app bundle
         run: |
-          pyinstaller --windowed --name macOS-installer-${{ github.run_number }} --hidden-import serial.tools.list_ports listener/main.py
+          pyinstaller --windowed --name macOS-installer --hidden-import serial.tools.list_ports listener/main.py
           ls -la dist
 
       - name: Ensure installers directory exists
@@ -41,7 +41,7 @@ jobs:
         uses: akiojin/generate-mac-installer-github-action@v0.1.1
         with:
           root-directory: dist
-          bundle-path: macOS-installer-${{ github.run_number }}.app
+          bundle-path: macOS-installer.app
           identifier: com.solo.board.macos-installer
           version: ${{ github.run_number }}
           output-directory: installers
@@ -77,6 +77,7 @@ jobs:
   
 
   pkg-Windows:
+    needs: pkg-Macos
     runs-on: windows-latest
     steps:
       - name: Checkout
@@ -92,7 +93,7 @@ jobs:
       - name: Install build deps
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller pyserial pyvolume
+          pip install pyinstaller pyserial pycaw comtypes
 
       - name: Build Windows exe
         run: |
@@ -118,12 +119,16 @@ jobs:
           OutputBaseFilename=Windows-installer-${{ github.run_number }}
           Compression=lzma
           SolidCompression=yes
+          PrivilegesRequired=lowest
 
           [Files]
           Source: "dist\Windows-installer.exe"; DestDir: "{app}"; Flags: ignoreversion
 
           [Icons]
           Name: "{autoprograms}\Windows-installer"; Filename: "{app}\Windows-installer.exe"
+
+          [Registry]
+          Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Windows-installer"; ValueData: """{app}\Windows-installer.exe"""; Flags: uninsdeletevalue
           "@ | Out-File -FilePath installer.iss -Encoding ASCII
 
       - name: Build Windows installer
