@@ -1,24 +1,43 @@
-            - name: Generate macOS Installer
-  # You may pin to the exact commit or the version.
-  # uses: akiojin/generate-mac-installer-github-action@2b665a3fa23e4ced931708ae7a94e280d10e6651
-  uses: akiojin/generate-mac-installer-github-action@v0.1.1
-  with:
-    # Specifies the output directory. If omitted, runner.temp is set.
+name: Generate macOS Installer
 
-    output-directory: # optional, default is ${{ runner.temp }}
-    # The root path of the directory containing the set of resources to be bundled.
+on:
+  workflow_dispatch:
 
-    root-directory: # optional
-    # Specify the relative path of *.app to be placed under the directory specified in 'root-directory' as the base point.
+jobs:
+  pkg:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    bundle-path: 
-    # Specify the application ID.
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    identifier: 
-    # Specifies the version of the package to be created. If omitted, github.run_numer is set.
+      - name: Install build deps
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyinstaller pyserial pyvolume
 
-    version:  github.run_numer
-    # The directory where the package is to be installed. If omitted, '/Applications' is specified.
+      # Build a macOS .app bundle (required by the installer action)
+      - name: Build macOS app bundle
+        run: |
+          pyinstaller --windowed --name SoloListener --hidden-import serial.tools.list_ports listener/main.py
+          ls -la dist
 
-    install-location: # optional, default is /Applications
-          
+      - name: Generate macOS Installer
+        uses: akiojin/generate-mac-installer-github-action@v0.1.1
+        with:
+          root-directory: dist
+          bundle-path: SoloListener.app
+          identifier: com.solo.board.listener
+          version: ${{ github.run_number }}
+          output-directory: ${{ runner.temp }}
+          # install-location: /Applications   # optional
+
+      - name: Upload pkg artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: solo-listener-macos-pkg
+          path: ${{ runner.temp }}/*.pkg
