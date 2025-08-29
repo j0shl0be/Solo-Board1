@@ -1,9 +1,13 @@
 name: Generate macOS Installer
 
+permissions:
+  contents: write
+
 on:
   push:
     branches:
-      'main'
+      - main
+  workflow_dispatch:
 
 jobs:
   pkg:
@@ -35,12 +39,17 @@ jobs:
           bundle-path: SoloListener.app
           identifier: com.solo.board.listener
           version: ${{ github.run_number }}
-          output-directory: ${{ runner.temp }}
-          # install-location: /Applications   # optional
+          output-directory: installers
 
-      - name: Upload installers
-        uses: actions/upload-artifact@v4
-        with:
-          name: installers
-          path: installers/**
-          if-no-files-found: error
+      - name: Verify installers directory
+        run: |
+          ls -la installers
+
+      - name: Commit and push installers to main
+        if: github.event_name != 'pull_request'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add installers/
+          git commit -m "Add macOS installer (run ${{ github.run_number }}) [skip ci]" || echo "No changes"
+          git push
