@@ -113,7 +113,7 @@ jobs:
 
       - name: Verify installers directory
         run: |
-          ls -la installers
+          ls installers
 
       - name: Commit and push installers to main
         if: github.event_name != 'pull_request'
