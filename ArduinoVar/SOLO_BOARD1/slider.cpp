@@ -20,8 +20,7 @@ void slider_begin() {
   // Load saved brightness from EEPROM
   globalBrightness = load_brightness();
   
-  // Set serial as connected since Serial.begin() was called
-  serialConnected = true;
+  serialConnected = TinyUSBDevice.mounted() && (bool)Serial;
 }
 
 uint8_t get_slider_percent() {//returns a calibrated volume
@@ -52,8 +51,6 @@ uint8_t calibrate_vol(uint8_t uncalibrated) {
 }
 
 void send_volume_change(uint8_t percent) {//sends the calibrated volume out if it is a larger difference than the threshold
-  SliderFunction currentFunc = getCurrentSliderFunction();
-  
   // Additional protection: clamp percent to 0-100 range
   if (percent > 100) {
     percent = 100;
@@ -62,25 +59,11 @@ void send_volume_change(uint8_t percent) {//sends the calibrated volume out if i
   int step = map(percent, 0, 100, 0, VOLUME_STEPS);  // use VOLUME_STEPS = number of HID sends
   if (step != lastVolumeStep) {
     lastVolumeStep = step;
-    
-    // Handle different slider functions
-    switch (currentFunc) {
-      case SLIDER_VOLUME:
-        // Send volume over serial if connected
-        if (serialConnected) {
-          Serial.print("VOL:");
-          Serial.println(percent);
-          Serial.flush(); // Ensure data is sent immediately
-        }
-        break;
-      case SLIDER_BRIGHTNESS:
-        // Update global brightness and save to EEPROM (0-100 range)
-        uint8_t newBrightness = percent; // Use percent directly (0-100)
-        if (newBrightness != globalBrightness) {
-          update_global_brightness(newBrightness);
-        }
-        break;
-    }
+    // Refresh serial connection state before calling callback
+    serialConnected = TinyUSBDevice.mounted() && (bool)Serial;
+    // Call per-layer slider callback
+    SliderCallback cb = getCurrentSliderCallback();
+    if (cb) cb(percent);
   }
   return;
 }

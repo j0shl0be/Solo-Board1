@@ -21,6 +21,7 @@ extern int lastPotValue;
 extern int lastVolumeStep;
 extern int lastVolumePercent;
 extern uint8_t globalBrightness;
+extern bool serialConnected;
 
 void slider_begin();
 uint8_t get_slider_percent();

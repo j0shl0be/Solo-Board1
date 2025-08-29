@@ -67,6 +67,15 @@ void tapHIDKey(uint8_t keycode, uint8_t modifier) {
   usb_hid.keyboardRelease(RID_KEYBOARD);  // Release all
 }
 
+void usb_clear_keyboard() {
+  // Clear internal state and send a release to host
+  for (int i = 0; i < 6; ++i) current_keys[i] = 0;
+  modifier = 0;
+  if (usb_hid.ready()) {
+    usb_hid.keyboardRelease(RID_KEYBOARD);
+  }
+}
+
 bool usb_is_ready() {
   return usb_hid.ready();
 }

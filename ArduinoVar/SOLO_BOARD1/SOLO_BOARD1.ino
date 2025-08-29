@@ -31,6 +31,7 @@ uint8_t lastShownVolume = 255;                  // impossible value for first ch
 Layer lastShownLayer = static_cast<Layer>(-1);  // force update initially
 unsigned long lastDisplayUpdate = 0;
 const unsigned long DISPLAY_UPDATE_INTERVAL_MS = 100;
+const int SERIAL_TIMEOUT = 1000;
 
 // Layer hold variables
 bool layerUpHeld = false;
@@ -52,14 +53,20 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
       layerUpTriggered = false;
       layerUpProcessed = true;
       layerUpHoldStart = millis();
+      // Show key name while held
+      display_update_key_name(row, col, true);
+      display_show(getCurrentLayer(), lastShownVolume);
     } else if (!pressed && layerUpProcessed) {
       // Key released - check if we should send regular key
       if (layerUpHeld && !layerUpTriggered) {
         // Was a short tap, send regular key
-        KeyCombo code = getLayerKeycode(row, col);
+        KeyStruct code = getLayerKeycode(row, col);
         if (code.keycode == 0) return;
         tapHIDKey(code.keycode, code.modifier1 | code.modifier2 | code.modifier3);
       }
+      // Clear key name on release
+      display_update_key_name(row, col, false);
+      display_show(getCurrentLayer(), lastShownVolume);
       layerUpHeld = false;
       layerUpTriggered = false;
       layerUpProcessed = false;
@@ -74,14 +81,20 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
       layerDownTriggered = false;
       layerDownProcessed = true;
       layerDownHoldStart = millis();
+      // Show key name while held
+      display_update_key_name(row, col, true);
+      display_show(getCurrentLayer(), lastShownVolume);
     } else if (!pressed && layerDownProcessed) {
       // Key released - check if we should send regular key
       if (layerDownHeld && !layerDownTriggered) {
         // Was a short tap, send regular key
-        KeyCombo code = getLayerKeycode(row, col);
+        KeyStruct code = getLayerKeycode(row, col);
         if (code.keycode == 0) return;
         tapHIDKey(code.keycode, code.modifier1 | code.modifier2 | code.modifier3);
       }
+      // Clear key name on release
+      display_update_key_name(row, col, false);
+      display_show(getCurrentLayer(), lastShownVolume);
       layerDownHeld = false;
       layerDownTriggered = false;
       layerDownProcessed = false;
@@ -91,10 +104,12 @@ void onKeyEvent(uint8_t row, uint8_t col, bool pressed) {
 
   // Handle regular key presses (only if not holding layer keys)
   if (!layerUpHeld && !layerDownHeld) {
-    KeyCombo code = getLayerKeycode(row, col);
+    KeyStruct code = getLayerKeycode(row, col);
     if (code.keycode == 0) return;
     sendHIDKey(code.keycode, pressed, code.modifier1 | code.modifier2 | code.modifier3);
+    display_update_key_name(row, col, pressed);
   }
+  display_show(getCurrentLayer(), lastShownVolume);
 }
 
 void setLayer(Layer layer) {
@@ -104,7 +119,11 @@ void setLayer(Layer layer) {
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  int timeout = 0;
+  while (!Serial && timeout < SERIAL_TIMEOUT) {
+    delay(10);
+    timeout++;
+  }
 
   // Initialize USB HID
   usb_begin();
