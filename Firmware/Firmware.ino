@@ -166,12 +166,13 @@ void loop() {
   uint8_t currentPercent = get_slider_percent();
 
   unsigned long now = millis();
-  if ((currentPercent != lastShownVolume || getCurrentLayer() != lastShownLayer) && 
-      (now - lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL_MS)) {
-    send_volume_change(currentPercent);
+  if (now - lastDisplayUpdate > DISPLAY_UPDATE_INTERVAL_MS) {
+    if (currentPercent != lastShownVolume || getCurrentLayer() != lastShownLayer) {
+      send_volume_change(currentPercent);
+      lastShownVolume = currentPercent;
+      lastShownLayer = getCurrentLayer();
+    }
     display_show(getCurrentLayer(), currentPercent);
-    lastShownVolume = currentPercent;
-    lastShownLayer = getCurrentLayer();
     lastDisplayUpdate = now;
   }
 }

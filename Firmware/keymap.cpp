@@ -239,6 +239,41 @@ static const uint32_t ICON_KEYBOARD_MEDIA_32[] = {
   0b00000000000000000000000000000000
 };
 
+static const uint32_t ICON_KEYBOARD_NOT_AVAILABLE_32[] = {
+  0b00000000000000000000000000000000, 
+  0b00000000000011111111000000000000, 
+  0b00000000011111111111111000000000, 
+  0b00000001111110000001111110000000, 
+  0b00000011110000000000011111000000, 
+  0b00000111100000000000000111100000, 
+  0b00001111000000000000000011110000, 
+  0b00011111100000000000000001111000, 
+  0b00011101110000000000000000111000, 
+  0b00111000111000000000000000011100, 
+  0b00110000011100000000000000001100, 
+  0b00110000001110000000000000001100, 
+  0b01110000000111000000000000001110, 
+  0b01100000000011100000000000000110, 
+  0b01100000000001110000000000000110, 
+  0b01100000000000111000000000000110, 
+  0b01100000000000011100000000000110, 
+  0b01100000000000001110000000000110, 
+  0b01100000000000000111000000000110, 
+  0b01110000000000000011100000001110, 
+  0b00110000000000000001110000001100, 
+  0b00110000000000000000111000011100, 
+  0b00111000000000000000011100011100, 
+  0b00011100000000000000001110111000, 
+  0b00011110000000000000000111111000, 
+  0b00001111000000000000000011110000, 
+  0b00000111100000000000000111100000, 
+  0b00000011110000000000011111000000, 
+  0b00000001111110000001111110000000, 
+  0b00000000011111111111111000000000, 
+  0b00000000000011111111000000000000, 
+  0b00000000000000000000000000000000
+};
+
 const LayerConfig layerConfigs[NUM_LAYERS] = {
   // ---------- LAYER 0: Default shortcuts ---------------------------------
   {
@@ -255,7 +290,11 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
     32,
     ICON_SLIDER_VOL_32,
     32,
-    slider_volume_callback },
+    slider_volume_callback,
+    ICON_KEYBOARD_NOT_AVAILABLE_32,
+    32,
+    "D"
+   },
   // ---------- LAYER 1: Second shortcuts ---------------------------------
   {
     // Keycodes
@@ -271,7 +310,11 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
     32,
     ICON_SLIDER_VOL_32,
     32,
-    slider_volume_callback },
+    slider_volume_callback,
+    ICON_KEYBOARD_NOT_AVAILABLE_32,
+    32,
+    "S"
+   },
   // ---------- LAYER 2: F‑Keys -------------------------------------------
   {
     // Keycodes
@@ -286,7 +329,11 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
     32,
     ICON_SLIDER_VOL_32,
     32,
-    slider_volume_callback },
+    slider_volume_callback,
+    ICON_KEYBOARD_NOT_AVAILABLE_32,
+    32,
+    "F"
+   },
 
   // ---------- LAYER 3: Media controls -----------------------------------
   {
@@ -298,12 +345,16 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
     },
     SLIDER_BRIGHTNESS,  // Slider function
     0x00FF00,           // Green color
-    "MEDIA",
+    "MEDIA",  
     ICON_KEYBOARD_MEDIA_32,
     32,
     ICON_SLIDER_BRIGHT_32,
     32,
-    slider_brightness_callback }
+    slider_brightness_callback,
+    NULL,
+    0,
+    "M"
+   }
 };
 
 // ------------------------ Helper functions -------------------------------
@@ -335,6 +386,10 @@ const void* getCurrentSliderIcon() {
   return layerConfigs[curLayer].sliderIcon;
 }
 
+const void* getCurrentNotAvailableIcon() {
+  return layerConfigs[curLayer].notAvailableIcon;
+}
+
 uint8_t getCurrentLayerIconSize() {
   return layerConfigs[curLayer].iconSize;
 }
@@ -343,8 +398,16 @@ uint8_t getCurrentSliderIconSize() {
   return layerConfigs[curLayer].sliderIconSize;
 }
 
+uint8_t getCurrentNotAvailableIconSize() {
+  return layerConfigs[curLayer].notAvailableIconSize;
+}
+
 SliderCallback getCurrentSliderCallback() {
   return layerConfigs[curLayer].sliderCallback;
+}
+
+const char* getCurrentDisplayLetter() {
+  return layerConfigs[curLayer].displayLetter;
 }
 
 

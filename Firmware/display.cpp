@@ -64,6 +64,13 @@ void drawLayerSliderIcon() {
   if (sliderIcon && sliderSize) {
     drawIconWithSize(32, 0, sliderIcon, sliderSize);
   }
+  if (!Serial) {
+    const void* notAvailableIcon = getCurrentNotAvailableIcon();
+    uint8_t notAvailableIconSize = getCurrentNotAvailableIconSize();
+    if (notAvailableIcon && notAvailableIconSize) {
+      drawIconWithSize(32, 0, notAvailableIcon, notAvailableIconSize);
+    }
+  }
 }
 
 void display_begin() {
@@ -134,11 +141,12 @@ void display_show(uint8_t layer, uint8_t volumePercent) {
       oled.fillRect(3, 69 - i * 12, 2, 10, SSD1306_WHITE);
     }
     else {
-      oled.fillRect(3, 68 - i * 12, 11, 12, SSD1306_WHITE);
-      oled.fillRect(3, 69 - i * 12, 10, 10, SSD1306_BLACK);
+      oled.fillRect(3, 68 - i * 12, 9, 12, SSD1306_WHITE);
+      oled.fillRect(3, 69 - i * 12, 8, 10, SSD1306_BLACK);
+      oled.setCursor(4, 70 - i * 12);
+      oled.print(getCurrentDisplayLetter());
     }
   }
-
 
   /* vertical slider bar (right side of vertical display) */
   // After 90° rotation: width=64, height=128

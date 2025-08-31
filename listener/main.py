@@ -10,6 +10,8 @@ import subprocess
 TARGET_VID = 0x239a
 TARGET_PID = 0xcafe
 
+TIMEOUT = 0.3
+
 
 def find_target_port():
 	ports = serial.tools.list_ports.comports()
@@ -45,7 +47,6 @@ def open_serial_blocking(baudrate=115200, timeout_s=0.1, retry_delay_s=2.0):
 
 
 stack = []
-timeout = 0.8
 last_time = time.time()
 ser = None
 
@@ -141,7 +142,7 @@ try:
 					except ValueError:
 						pass
 
-			if time.time() - last_time > timeout:
+			if time.time() - last_time > TIMEOUT:
 				if len(stack) > 0:
 					set_volume(stack.pop())
 					stack.clear()

@@ -32,6 +32,9 @@ struct LayerConfig {
   const void* sliderIcon;         // Slider icon (8x8 or 16x16)
   uint8_t sliderIconSize;         // Slider icon size in pixels (8, 16, 32)
   SliderCallback sliderCallback;  // Callback to handle 0-100 slider value
+  const void* notAvailableIcon;    // NA icon (8x8 or 16x16)
+  uint8_t notAvailableIconSize;    // NA icon size in pixels (8, 16, 32)
+  const char* displayLetter;        // Letter shown on OLED display
 };
 
 // ------------------------ Layer enumeration ------------------------------
@@ -63,9 +66,12 @@ uint32_t getCurrentLedColor();
 const char* getCurrentDisplayName();
 const void* getCurrentLayerIcon();
 const void* getCurrentSliderIcon();
+const void* getCurrentNotAvailableIcon();
 uint8_t getCurrentLayerIconSize();
 uint8_t getCurrentSliderIconSize();
+uint8_t getCurrentNotAvailableIconSize();
 SliderCallback getCurrentSliderCallback();
+const char* getCurrentDisplayLetter();
 String getKeyName(uint8_t keycode);
 
 // ------------------------ Layer management functions ---------------------
