@@ -279,9 +279,9 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      { { KEY_B, KEY_MOD_LSHIFT, 0, 0, "B" }, { KEY_C, KEY_MOD_LSHIFT, 0, 0, "C" }, { KEY_D, KEY_MOD_LSHIFT, 0, 0, "D" } },  // b, c, d
-      { { KEY_A, KEY_MOD_LSHIFT, 0, 0, "A" }, { KEY_E, KEY_MOD_LSHIFT, 0, 0, "E" }, { KEY_F, KEY_MOD_LSHIFT, 0, 0, "F" } },  // a, e, f
-      { { KEY_I, KEY_MOD_LSHIFT, 0, 0, "I" }, { KEY_H, KEY_MOD_LSHIFT, 0, 0, "H" }, { KEY_G, KEY_MOD_LSHIFT, 0, 0, "G" } }   // i, h, g
+      { { KEY_DELETE, KEY_MOD_LSHIFT, 0, 0, "Ripple Delete" }, { KEY_COMMA, 0, 0, 0, "Insert" }, { KEY_G, KEY_MOD_LMETA, 0, 0, "Group" }},  // b, c, d
+      { { KEY_UP, KEY_MOD_LALT, KEY_MOD_LMETA, 0, "Prev Caption" }, { KEY_A, KEY_MOD_LALT, KEY_MOD_LMETA, 0, "New Caption" }, { KEY_DOWN, KEY_MOD_LALT, KEY_MOD_LMETA, 0, "Next Caption" } },  // a, e, f
+      { { KEY_EQUAL, KEY_MOD_LSHIFT, 0, 0, "Next Sequence" }, { KEY_EQUAL, KEY_MOD_LALT, 0, 0, "Prev Sequence" }, { KEY_O, KEY_MOD_LSHIFT, 0, 0, "Source Monitor" } }   // i, h, g
     },
     SLIDER_VOLUME,  // Slider function
     0x0050FF,       // Blue color
@@ -301,7 +301,7 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
     {
       { { KEY_B, KEY_MOD_LSHIFT, 0, 0, "B" }, { KEY_C, KEY_MOD_LSHIFT, 0, 0, "C" }, { KEY_D, KEY_MOD_LSHIFT, 0, 0, "D" } },  // b, c, d
       { { KEY_A, KEY_MOD_LSHIFT, 0, 0, "A" }, { KEY_E, KEY_MOD_LSHIFT, 0, 0, "E" }, { KEY_F, KEY_MOD_LSHIFT, 0, 0, "F" } },  // a, e, f
-      { { KEY_I, KEY_MOD_LSHIFT, 0, 0, "I" }, { KEY_H, KEY_MOD_LSHIFT, 0, 0, "H" }, { KEY_G, KEY_MOD_LSHIFT, 0, 0, "G" } }   // i, h, g
+      { { KEY_M, KEY_MOD_LSHIFT, KEY_MOD_LMETA, 0, "Prev Marker" }, { KEY_M, 0, 0, 0, "New Marker" }, { KEY_M, KEY_MOD_LSHIFT, 0, 0, "Next Marker" } }   // i, h, g
     },
     SLIDER_VOLUME,  // Slider function
     0x0050FF,       // Blue color
@@ -319,9 +319,10 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      { { KEY_TAB, KEY_MOD_LALT, 0, 0, "Alt+Tab" }, { KEY_F14, 0, 0, 0, "F14" }, { KEY_F15, 0, 0, 0, "F15" } },
+      { { KEY_F13, 0, 0, 0, "F13" }, { KEY_F14, 0, 0, 0, "F14" }, { KEY_F15, 0, 0, 0, "F15" } },
       { { KEY_F16, 0, 0, 0, "F16" }, { KEY_F17, 0, 0, 0, "F17" }, { KEY_F18, 0, 0, 0, "F18" } },
-      { { KEY_F19, 0, 0, 0, "F19" }, { KEY_F20, 0, 0, 0, "F20" }, { KEY_F21, 0, 0, 0, "F21" } } },
+      { { KEY_F19, 0, 0, 0, "F19" }, { KEY_F20, 0, 0, 0, "F20" }, { KEY_F21, 0, 0, 0, "F21" } }
+    },
     SLIDER_VOLUME,  // Slider function
     0xFF0064,       // Magenta color
     "F-KEYS",
