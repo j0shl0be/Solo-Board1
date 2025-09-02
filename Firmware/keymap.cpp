@@ -340,13 +340,13 @@ const LayerConfig layerConfigs[NUM_LAYERS] = {
   {
     // Keycodes
     {
-      { { KEY_MEDIA_PLAYPAUSE, 0, 0, 0, "Play/Pause" }, { KEY_MEDIA_NEXTSONG, 0, 0, 0, "Next" }, { KEY_MEDIA_PREVIOUSSONG, 0, 0, 0, "Prev" } },  // Media play/pause, next, previous
+      { { KEY_MEDIA_PLAYPAUSE, 0, 0, 0, "Play/Pause" }, { KEY_MEDIA_PREVIOUSSONG, 0, 0, 0, "Prev" }, { KEY_MEDIA_NEXTSONG, 0, 0, 0, "Next" } },  // Media play/pause, next, previous
       { { KEY_MEDIA_VOLUMEUP, 0, 0, 0, "Vol+" }, { KEY_MEDIA_VOLUMEDOWN, 0, 0, 0, "Vol-" }, { KEY_MEDIA_MUTE, 0, 0, 0, "Mute" } },         // Volume up, down, mute
-      { { KEY_MEDIA_PLAYPAUSE, 0, 0, 0, "Play/Pause" }, { KEY_MEDIA_NEXTSONG, 0, 0, 0, "Next" }, { KEY_MEDIA_PREVIOUSSONG, 0, 0, 0, "Prev" } }   // Media controls
+      { { KEY_MEDIA_PLAYPAUSE, 0, 0, 0, "Play/Pause" }, { KEY_MEDIA_PREVIOUSSONG, 0, 0, 0, "Prev" }, { KEY_MEDIA_NEXTSONG, 0, 0, 0, "Next" } }   // Media controls
     },
     SLIDER_BRIGHTNESS,  // Slider function
     0x00FF00,           // Green color
-    "MEDIA",  
+    "MEDIA",
     ICON_KEYBOARD_MEDIA_32,
     32,
     ICON_SLIDER_BRIGHT_32,

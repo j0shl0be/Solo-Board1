@@ -4,6 +4,7 @@
 #include <Adafruit_TinyUSB.h>
 
 #define RID_KEYBOARD 1
+#define RID_CONSUMER 2
 
 // USB HID report descriptor
 extern uint8_t const desc_hid_report[];

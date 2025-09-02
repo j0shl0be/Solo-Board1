@@ -156,10 +156,8 @@ void display_show(uint8_t layer, uint8_t volumePercent) {
 
   // Bottom-left: show last pressed key name
   if (g_hasKeyName && g_lastKeyName && g_lastKeyName[0] != '\0') {
-    oled.setTextSize(2);
     oled.setCursor(2, 96);
     oled.print(g_lastKeyName);
-    oled.setTextSize(1);
   }
 
   oled.display();
